@@ -1,12 +1,12 @@
 // components/UserForm.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 
 interface FormData {
     name: string;
-    date: string;
-    profilePic: FileList;
+    dob: string;
+    picture: FileList;
     profilePicURL?: string;
 }
 
@@ -15,18 +15,35 @@ const UserForm: React.FC = () => {
     const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
     const [userData, setUserData] = useState<FormData[]>([]);
 
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axios.get('http://77.37.44.60:7060/users');
+                if (response.status === 200) {
+                    setUserData(response.data);
+                } else {
+                    console.error('Error fetching data', response);
+                }
+            } catch (error) {
+                console.error('Error fetching data', error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
     const onSubmit = async (data: FormData) => {
-        if (data.profilePic && data.profilePic.length > 0) {
-            data.profilePicURL = URL.createObjectURL(data.profilePic[0]);
+        if (data.picture && data.picture.length > 0) {
+            data.profilePicURL = URL.createObjectURL(data.picture[0]);
         }
 
         try {
             const formData = new FormData();
             formData.append('name', data.name);
-            formData.append('date', data.date);
-            formData.append('profilePic', data.profilePic[0]);
+            formData.append('dob', data.dob);
+            formData.append('picture', data.picture[0]);
 
-            const response = await axios.post(' ', formData, {
+            const response = await axios.post('http://77.37.44.60:7060/user', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -71,10 +88,10 @@ const UserForm: React.FC = () => {
                         <input
                             id="date"
                             type="date"
-                            {...register('date', { required: 'DOB is required' })}
+                            {...register('dob', { required: 'DOB is required' })}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
-                        {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
+                        {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>}
                     </div>
 
                     <div className="mb-4">
@@ -82,11 +99,11 @@ const UserForm: React.FC = () => {
                         <input
                             id="profilePic"
                             type="file"
-                            {...register('profilePic', { required: 'Profile picture is required' })}
+                            {...register('picture', { required: 'Profile picture is required' })}
                             onChange={handleProfilePicChange}
                             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
-                        {errors.profilePic && <p className="text-red-500 text-xs mt-1">{errors.profilePic.message}</p>}
+                        {errors.picture && <p className="text-red-500 text-xs mt-1">{errors.picture.message}</p>}
                         {profilePicPreview && (
                             <div className="mt-2">
                                 <img src={profilePicPreview} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover" />
@@ -113,7 +130,7 @@ const UserForm: React.FC = () => {
                         {userData.map((user, index) => (
                             <tr key={index}>
                                 <td className="py-2 px-4 border-b text-black">{user.name}</td>
-                                <td className="py-2 px-4 border-b text-black">{user.date}</td>
+                                <td className="py-2 px-4 border-b text-black">{user.dob}</td>
                                 <td className="py-2 px-4 border-b text-black">
                                     {user.profilePicURL && (
                                         <img src={user.profilePicURL} alt="Profile" className="w-12 h-12 rounded-full object-cover mx-auto" />
